@@ -51,7 +51,7 @@
         <div class="guide-flow">
           <div class="flow-step">Tín hiệu thô<br/><span class="flow-sub">PCM samples</span></div>
           <div class="flow-arrow">→</div>
-          <div class="flow-step">Trích đặc trưng<br/><span class="flow-sub">MFCC / Formant / Pitch…</span></div>
+          <div class="flow-step">Trích đặc trưng<br/><span class="flow-sub">MFCC-39 / LPC / V·UV / Flux…</span></div>
           <div class="flow-arrow">→</div>
           <div class="flow-step">Căn chỉnh thời gian<br/><span class="flow-sub">Dynamic Time Warping</span></div>
           <div class="flow-arrow">→</div>
@@ -80,40 +80,126 @@
       <section class="guide-section">
         <h2 class="guide-h2">Các phương pháp phân tích</h2>
 
-        <div class="method-explain" id="exp-m1">
+        <div class="method-explain" id="exp-mfcc">
           <div class="method-explain-header">
-            <span class="method-badge method-badge--on">M1</span>
-            <h3>MFCC + DTW <em>(Mel-Frequency Cepstral Coefficients)</em></h3>
+            <span class="method-badge method-badge--on">MFCC</span>
+            <h3>MFCC-39 + DTW <em>(Mel-Frequency Cepstral Coefficients)</em></h3>
             <span class="method-badge method-badge--default">Mặc định ON</span>
           </div>
-          <p><strong>Đo cái gì:</strong> Bao hình phổ / âm sắc tổng thể, bất kể độ dài clip.</p>
+          <p><strong>Đo cái gì:</strong> Bao hình phổ / âm sắc tổng thể kèm <em>vận tốc và gia tốc</em> thay đổi — bắt cả hình dạng âm lẫn chuyển tiếp giữa các âm.</p>
           <div class="guide-steps">
-            <div class="step"><span class="step-num">1</span><div><strong>Pre-emphasis:</strong> y[n] = x[n] − 0.97·x[n−1] — nhấn mạnh tần số cao để bù suy hao phổ tự nhiên.</div></div>
-            <div class="step"><span class="step-num">2</span><div><strong>Framing:</strong> Chia tín hiệu thành khung 25ms, hop 10ms, nhân cửa sổ Hann.</div></div>
-            <div class="step"><span class="step-num">3</span><div><strong>FFT:</strong> Biến đổi Fourier → phổ biên độ.</div></div>
-            <div class="step"><span class="step-num">4</span><div><strong>Mel filterbank:</strong> 26 bộ lọc tam giác trên thang Mel (mô phỏng tai người — dày ở tần số thấp, thưa ở tần số cao).</div></div>
-            <div class="step"><span class="step-num">5</span><div><strong>Log + DCT:</strong> Lấy log năng lượng → biến đổi cosine rời rạc → 13 hệ số MFCC.</div></div>
-            <div class="step"><span class="step-num">6</span><div><strong>DTW:</strong> So sánh chuỗi 13D giữa A và B với căn chỉnh đàn hồi theo thời gian.</div></div>
+            <div class="step"><span class="step-num">1</span><div><strong>Pre-emphasis + Hann:</strong> Nhấn mạnh tần số cao; chia khung 25ms, hop 10ms.</div></div>
+            <div class="step"><span class="step-num">2</span><div><strong>FFT + Mel filterbank:</strong> 26 bộ lọc tam giác trên thang Mel → log năng lượng → DCT → 13 hệ số tĩnh.</div></div>
+            <div class="step"><span class="step-num">3</span><div><strong>Delta (Δ):</strong> Đạo hàm bậc 1 theo thời gian → 13 hệ số vận tốc (tốc độ thay đổi âm vị).</div></div>
+            <div class="step"><span class="step-num">4</span><div><strong>Delta-delta (ΔΔ):</strong> Đạo hàm bậc 2 → 13 hệ số gia tốc (nhịp chuyển tiếp âm vị).</div></div>
+            <div class="step"><span class="step-num">5</span><div><strong>DTW 39D:</strong> So sánh chuỗi 39 chiều [tĩnh | Δ | ΔΔ] giữa A và B với căn chỉnh đàn hồi.</div></div>
           </div>
           <div class="guide-formula-box">
-            <code>similarity = 100 · exp(−distance / 2.0)</code>
-            <span class="formula-note">distance = tổng chi phí DTW / độ dài đường đi</span>
+            <code>similarity = 100 · exp(−distance / 3.0)</code>
+            <span class="formula-note">scale 3.0 vì vector 39D có độ lớn Euclid cao hơn 13D</span>
           </div>
           <div class="guide-notes">
-            <span class="note-pro">✓ Nhanh, không cần model, agnostic ngôn ngữ</span>
-            <span class="note-con">✗ Lẫn giọng người nói; nhạy với nhiễu</span>
+            <span class="note-pro">✓ Nhanh, không cần model, agnostic ngôn ngữ; delta bắt chuyển tiếp âm vị tốt hơn MFCC-13</span>
+            <span class="note-con">✗ Vẫn bị ảnh hưởng phần nào bởi âm sắc giọng người nói</span>
           </div>
           <div class="guide-example">
-            <strong>Ví dụ:</strong> <em>father</em> vs <em>harder</em> — chia sẻ cấu trúc âm vị gần nhau → MFCC chuỗi sẽ có hình dạng phổ tương tự → điểm cao (~65–75%).
+            <strong>Ví dụ:</strong> "I'll go there" vs "úm um ùm" — chuỗi delta bắt nhịp chuyển tiếp CVC tương tự → điểm cao hơn MFCC-13 thuần túy.
           </div>
         </div>
 
-        <div class="method-explain" id="exp-m2">
+        <div class="method-explain" id="exp-lpc">
           <div class="method-explain-header">
-            <span class="method-badge method-badge--off">M2</span>
-            <h3>Formant similarity <em>(F1, F2)</em></h3>
+            <span class="method-badge method-badge--on">LPC</span>
+            <h3>LPC + DTW <em>(Linear Predictive Coding)</em></h3>
+            <span class="method-badge method-badge--default">Mặc định ON</span>
           </div>
-          <p><strong>Đo cái gì:</strong> Quỹ đạo formant — đặc trưng chất nguyên âm. Giải thích vì sao <em>father</em> ~ <em>harder</em>: cả hai chia sẻ nguyên âm /ɑː/ với F1≈700Hz, F2≈1100Hz.</p>
+          <p><strong>Đo cái gì:</strong> Hình dạng vocal tract — mô hình khoang miệng cho cả nguyên âm lẫn phụ âm, không phân biệt ngôn ngữ. Bổ sung cho MFCC bằng cách mô hình hóa bộ lọc all-pole thay vì phổ cepstral.</p>
+          <div class="guide-steps">
+            <div class="step"><span class="step-num">1</span><div><strong>Pre-emphasis + Hann:</strong> Chuẩn bị mỗi khung 25ms, hop 10ms.</div></div>
+            <div class="step"><span class="step-num">2</span><div><strong>Levinson-Durbin:</strong> Giải hệ phương trình Yule-Walker → 12 hệ số LPC xấp xỉ vocal tract dưới dạng bộ lọc AR bậc 12.</div></div>
+            <div class="step"><span class="step-num">3</span><div><strong>DTW 12D:</strong> So chuỗi hệ số LPC của A và B.</div></div>
+          </div>
+          <div class="guide-formula-box">
+            <code>similarity = 100 · exp(−distance / 1.5)</code>
+          </div>
+          <div class="guide-notes">
+            <span class="note-pro">✓ Mô hình trực tiếp cấu hình khoang miệng; phụ âm được đặc trưng tốt hơn MFCC</span>
+            <span class="note-con">✗ Nhạy với nhiễu; scale chuẩn hóa khác MFCC</span>
+          </div>
+        </div>
+
+        <div class="method-explain" id="exp-vuv">
+          <div class="method-explain-header">
+            <span class="method-badge method-badge--on">V/UV</span>
+            <h3>V/UV Rhythm <em>(Voiced / Unvoiced)</em></h3>
+            <span class="method-badge method-badge--default">Mặc định ON</span>
+          </div>
+          <p><strong>Đo cái gì:</strong> Nhịp âm tiết — chuỗi khung hữu thanh/vô thanh theo thời gian. Hai clip có cùng "bộ khung xương" âm vị học dù nói khác ngôn ngữ hay khác từ.</p>
+          <div class="guide-steps">
+            <div class="step"><span class="step-num">1</span><div><strong>Mỗi khung 25ms:</strong> tính năng lượng RMS và tỷ lệ zero-crossing (ZCR).</div></div>
+            <div class="step"><span class="step-num">2</span><div><strong>Phân loại:</strong> Năng lượng &gt; 0.001 VÀ ZCR &lt; 15% → hữu thanh (1.0), còn lại → vô thanh (0.0).</div></div>
+            <div class="step"><span class="step-num">3</span><div><strong>DTW scalar:</strong> So chuỗi nhị phân {0, 1} của A và B.</div></div>
+          </div>
+          <div class="guide-formula-box">
+            <code>similarity = 100 · exp(−distance / 0.3)</code>
+          </div>
+          <div class="guide-notes">
+            <span class="note-pro">✓ Bất biến với ngôn ngữ; nhanh; nắm nhịp CV/CVC</span>
+            <span class="note-con">✗ Bỏ qua phẩm chất âm — hai clip nhịp giống nhưng âm hoàn toàn khác vẫn cho điểm cao</span>
+          </div>
+          <div class="guide-example">
+            <strong>Ví dụ:</strong> "I'll go there" vs "úm um ùm" — cả hai có nhịp V·CVC·CV gần nhau → V/UV rhythm tương đồng → điểm cao.
+          </div>
+        </div>
+
+        <div class="method-explain" id="exp-sflux">
+          <div class="method-explain-header">
+            <span class="method-badge method-badge--off">FLUX</span>
+            <h3>Spectral Flux</h3>
+          </div>
+          <p><strong>Đo cái gì:</strong> Nhịp chuyển tiếp âm vị — tốc độ thay đổi phổ theo thời gian. Hai clip có cùng nhịp biến đổi âm thanh sẽ có profile flux tương tự, dù nội dung khác nhau.</p>
+          <div class="guide-steps">
+            <div class="step"><span class="step-num">1</span><div>Tính phổ biên độ FFT mỗi khung (FFT size = 2ⁿ gần nhất).</div></div>
+            <div class="step"><span class="step-num">2</span><div><strong>Flux[t]:</strong> Chuẩn L2 của hiệu phổ giữa hai khung liên tiếp — 0 khi phổ ổn định, cao khi có onset âm vị.</div></div>
+            <div class="step"><span class="step-num">3</span><div><strong>DTW scalar:</strong> So chuỗi flux của A và B.</div></div>
+          </div>
+          <div class="guide-formula-box">
+            <code>flux[t] = ‖ |X[t]| − |X[t−1]| ‖₂</code>
+            <span class="formula-note">|X[t]| = magnitude spectrum khung t · Khung đầu tiên luôn = 0</span>
+          </div>
+          <div class="guide-notes">
+            <span class="note-pro">✓ Nắm nhịp onset âm vị; bổ sung góc nhìn khác cho MFCC và LPC</span>
+            <span class="note-con">✗ Nhạy với nhiễu nền; scale biến thiên lớn tùy clip</span>
+          </div>
+        </div>
+
+        <div class="method-explain" id="exp-wav2vec">
+          <div class="method-explain-header">
+            <span class="method-badge method-badge--off">W2V</span>
+            <h3>wav2vec Embedding <em>(neural · ~90MB lần đầu)</em></h3>
+          </div>
+          <p><strong>Đo cái gì:</strong> Embedding âm vị học học được từ dữ liệu — model pretrained trên hàng trăm nghìn giờ tiếng nói đa ngôn ngữ. Âm vị tương đồng cluster gần nhau trong không gian embedding bất kể ngôn ngữ nguồn.</p>
+          <div class="guide-steps">
+            <div class="step"><span class="step-num">1</span><div><strong>ONNX runtime (WebAssembly):</strong> Load model <code>Xenova/wav2vec2-base</code> (~90MB, cached trong browser sau lần đầu). Bật thủ công trong method cards.</div></div>
+            <div class="step"><span class="step-num">2</span><div><strong>Feature extraction + mean pooling:</strong> Trích embedding vector toàn clip.</div></div>
+            <div class="step"><span class="step-num">3</span><div><strong>Cosine similarity:</strong> Đo góc giữa hai embedding trong không gian cao chiều.</div></div>
+          </div>
+          <div class="guide-formula-box">
+            <code>score = ((cosine_sim + 1) / 2) × 100</code>
+            <span class="formula-note">ánh xạ cosine ∈ [−1, 1] → score ∈ [0, 100]</span>
+          </div>
+          <div class="guide-notes">
+            <span class="note-pro">✓ Mạnh nhất cho sound mirror đa ngôn ngữ; học đặc trưng âm vị từ dữ liệu thực</span>
+            <span class="note-con">✗ ~90MB tải lần đầu; chậm hơn DSP; cần bật thủ công</span>
+          </div>
+        </div>
+
+        <div class="method-explain" id="exp-formant">
+          <div class="method-explain-header">
+            <span class="method-badge method-badge--off">FORM</span>
+            <h3>Formant Similarity <em>(F1, F2 — nguyên âm)</em></h3>
+          </div>
+          <p><strong>Đo cái gì:</strong> Quỹ đạo formant — đặc trưng chất nguyên âm. <em>Chỉ có ý nghĩa với phụ âm hữu thanh và nguyên âm</em> — không phải sound mirror method toàn diện. Giải thích vì sao <em>father</em> ~ <em>harder</em>: cả hai chia sẻ nguyên âm /ɑː/ với F1≈700Hz, F2≈1100Hz.</p>
           <div class="guide-steps">
             <div class="step"><span class="step-num">1</span><div><strong>LPC order 12:</strong> Lấy hệ số dự đoán tuyến tính bằng giải thuật Levinson-Durbin.</div></div>
             <div class="step"><span class="step-num">2</span><div><strong>Tìm nghiệm đa thức LPC:</strong> Các cặp nghiệm phức liên hợp tương ứng với formant (cộng hưởng của khoang miệng).</div></div>
@@ -126,10 +212,10 @@
           </div>
         </div>
 
-        <div class="method-explain" id="exp-m3">
+        <div class="method-explain" id="exp-melspec">
           <div class="method-explain-header">
-            <span class="method-badge method-badge--off">M3</span>
-            <h3>Mel-spectrogram correlation</h3>
+            <span class="method-badge method-badge--off">MEL</span>
+            <h3>Mel-Spectrogram Correlation</h3>
           </div>
           <p><strong>Đo cái gì:</strong> Mức độ tương đồng của mẫu năng lượng theo thời gian–tần số. Không dùng DCT như MFCC — giữ nguyên 40 dải Mel → bức tranh "màu âm" đầy đủ hơn.</p>
           <div class="guide-steps">
@@ -146,12 +232,12 @@
           </div>
         </div>
 
-        <div class="method-explain" id="exp-m5">
+        <div class="method-explain" id="exp-pitch">
           <div class="method-explain-header">
-            <span class="method-badge method-badge--off">M5</span>
-            <h3>Pitch (F0) contour</h3>
+            <span class="method-badge method-badge--off">PITCH</span>
+            <h3>Pitch (F0) Contour <em>— không phải sound mirror method</em></h3>
           </div>
-          <p><strong>Đo cái gì:</strong> Độ giống của đường ngữ điệu / cao độ. Quan trọng khi so sánh cùng câu đọc với ngữ điệu khác nhau, hoặc kiểm tra xem hai người có "lên xuống" giống nhau không.</p>
+          <p><strong>Đo cái gì:</strong> Đường ngữ điệu / cao độ. Đo prosody (lên xuống giọng), <em>không phải hình dạng âm vị</em> — hai clip có âm vị giống nhau hoàn toàn có thể có pitch khác nhau. Hữu ích cho tiếng có thanh điệu (tiếng Việt, tiếng Hoa) nhưng không đại diện cho sound mirror.</p>
           <div class="guide-steps">
             <div class="step"><span class="step-num">1</span><div><strong>Autocorrelation:</strong> Với mỗi khung, tìm lag cho tương quan cực đại trong khoảng 50–500Hz (tức lag 32–320 mẫu ở 16kHz).</div></div>
             <div class="step"><span class="step-num">2</span><div>Chỉ giữ khung hữu thanh (autocorrelation đủ cao). Loại khung vô thanh.</div></div>
@@ -163,12 +249,12 @@
           </div>
         </div>
 
-        <div class="method-explain" id="exp-m6">
+        <div class="method-explain" id="exp-rawcorr">
           <div class="method-explain-header">
-            <span class="method-badge method-badge--off">M6</span>
-            <h3>Raw cross-correlation <em>(đường cơ sở)</em></h3>
+            <span class="method-badge method-badge--off">RAW</span>
+            <h3>Raw Cross-Correlation <em>— không phải sound mirror method</em></h3>
           </div>
-          <p><strong>Đo cái gì:</strong> Tương quan dạng sóng thô sau khi căn chỉnh pha — <em>baseline để thấy tại sao cần các method tốt hơn</em>.</p>
+          <p><strong>Đo cái gì:</strong> Tương quan dạng sóng thô sau khi căn chỉnh pha. Đây là <em>baseline để thấy tại sao cần trích đặc trưng</em> — so trực tiếp PCM samples nên rất nhạy với giọng người nói, độ dài, phòng thu.</p>
           <div class="guide-steps">
             <div class="step"><span class="step-num">1</span><div>Chuẩn hóa cả hai signal về unit energy.</div></div>
             <div class="step"><span class="step-num">2</span><div>Tính cross-correlation, lấy giá trị cực đại (tốt nhất về pha).</div></div>
@@ -192,10 +278,12 @@
             <div class="guide-card-icon">🎯</div>
             <h3>Chọn method theo mục đích</h3>
             <ul class="guide-list">
-              <li>So phát âm (cùng từ, cùng ngữ cảnh) → <strong>M1 MFCC + M2 Formant</strong></li>
-              <li>So ngữ điệu / thanh điệu → <strong>M5 Pitch</strong></li>
-              <li>Kiểm tra TTS vs giọng thật → <strong>M1 + M3</strong></li>
-              <li>Baseline / debug → <strong>M6</strong></li>
+              <li>Sound mirror đa ngôn ngữ → <strong>MFCC-39 + LPC + V/UV</strong> (mặc định ON)</li>
+              <li>Phân tích cross-language sâu → thêm <strong>wav2vec</strong> (bật thủ công, ~90MB)</li>
+              <li>So phát âm cùng ngôn ngữ → <strong>MFCC-39 + Formant</strong></li>
+              <li>Ngữ điệu / thanh điệu → <strong>Pitch</strong> (không phải sound mirror)</li>
+              <li>Kiểm tra TTS vs giọng thật → <strong>MFCC-39 + Mel-Spectrogram</strong></li>
+              <li>Debug / baseline → <strong>Raw Correlation</strong></li>
             </ul>
           </div>
           <div class="guide-card">
