@@ -2,10 +2,10 @@
 
 ## Status
 
-- Architecture status: Detected (evidence-backed) — keep-as-is recommendation is Candidate
-- Stack status: Detected
+- Architecture status: **Accepted** (Lucy, 2026-06-10 — ADR-004)
+- Stack status: Accepted (keep detected stack as-is)
 - Last updated: 2026-06-10
-- Human acceptance required before further implementation: yes
+- Human acceptance required before further implementation: no — accepted
 
 ## Architecture Summary
 
@@ -26,8 +26,8 @@ Fully static browser app. `index.html` + `style.css` form the shell; vanilla ES 
 
 ## Recommended Candidate
 
-- Keep the detected stack unchanged. No migration. Rationale: requirements (static, local, language-agnostic DSP) are fully met; zero build step keeps maintenance minimal.
-- Status: Candidate — pending Lucy confirmation.
+- Keep the detected stack unchanged. No migration.
+- Status: **Accepted** by Lucy 2026-06-10 (ADR-004).
 
 ## Module Map
 
@@ -84,5 +84,5 @@ flowchart LR
 
 - [x] Existing stack detected with evidence
 - [x] Candidate recommendation not treated as accepted
-- [ ] Human accepted stack before further implementation
+- [x] Human accepted stack before further implementation (2026-06-10)
 - [x] Decisions recorded in `context/05-decisions.md`

@@ -6,9 +6,9 @@ Date: 2026-06-10
 ## Summary
 
 - Repository root: `C:\Users\gensh\OneDrive\Máy tính\LUCY\PROJECT-WORKPLACE\CHUNKS\CHUNKS-VEB-COMAPRE`
-- Hygiene status: Draft — pending Lucy review
+- Hygiene status: Approved 2026-06-10; cleanup applied (commit `b1edbcc`)
 - Main risks: foreign agent framework inside `src/`, line-ending churn in working tree, root folder name mismatch
-- Cleanup implementation status: not started
+- Cleanup implementation status: done except folder rename (CAND-004 open). Removed: `src/.pi/gsd`, server logs/pid, `DESIGN.md` (merged to 07-ui-system). Added `.gitattributes`, renormalized line endings.
 
 ## Canonical Folder Map
 

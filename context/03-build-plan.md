@@ -2,9 +2,9 @@
 
 ## Status
 
-- Build plan status: Candidate — reconstructed from `docs/superpowers/plans/2026-06-06-sound-mirror-methods.md` + git history; pending Lucy confirmation
+- Build plan status: **Accepted** (Lucy, 2026-06-10 — ADR-005)
 - Last updated: 2026-06-10
-- Human acceptance required before further implementation: yes
+- Human acceptance required before further implementation: no — accepted
 
 ## Reality Note (adopt mode)
 
@@ -29,8 +29,8 @@ Most of the original plan is already implemented (commits `00797c8`…`7f9325d`,
 | F02 | Verdict workflow + Method Performance (Phase 2) | 2/4 | pending verification |
 | F03 | wav2vec via ONNX (Phase 3) | 2/4 | pending verification |
 | F04 | UI restyle — Stitch Swiss minimal | 2/4 | pending verification |
-| F05 | Repo hygiene cleanup (approved candidates only) | 0/4 | blocked — needs Lucy confirmation |
-| F06 | Release to Vercel production | 0/5 | blocked — needs accepted plan |
+| F05 | Repo hygiene cleanup (approved candidates only) | 3/4 | applied — npm test evidence pending |
+| F06 | Release to Vercel production | 0/5 | unblocked by ADR-005; needs F01–F05 verified |
 
 ## Feature Checklists
 
@@ -62,14 +62,14 @@ Most of the original plan is already implemented (commits `00797c8`…`7f9325d`,
 - [ ] Visual review/screenshots of analyzer, history, guide, LLM settings
 - [ ] DOM IDs preserved (guardrail) — spot-check after any UI change
 
-### F05 — Repo hygiene cleanup — 0/4 (blocked)
+### F05 — Repo hygiene cleanup — 3/4
 
-- [ ] Lucy confirms candidates (src/.pi, server logs, DESIGN.md merge, .gitattributes, rename)
-- [ ] Apply approved changes only
-- [ ] `npm test` + app loads after cleanup
-- [ ] Audit file updated to "done"
+- [x] Lucy confirmed 4 candidates 2026-06-10 (rename CAND-004 still open)
+- [x] Applied: removed src/.pi/gsd + server logs + DESIGN.md, added .gitattributes, renormalized (commit `b1edbcc`); app serves HTTP 200 after cleanup
+- [ ] `npm test` green after cleanup — run on Windows (sandbox cannot run rollup native binding)
+- [x] Hygiene audit updated
 
-### F06 — Release to Vercel production — 0/5 (blocked)
+### F06 — Release to Vercel production — 0/5
 
 - [ ] Working tree clean, line-ending churn resolved, commit + tag
 - [ ] Preview deploy validated (analyzer, guide, LLM settings, model test, JSON AI analysis)
@@ -90,12 +90,12 @@ See `scripts/seed-sound-mirror-board.ps1`. One task per feature F01–F06 + gate
 
 ## Progress Calculation Rule
 
-`overall = checked / total checklist items` across F01–F06 (evidence required). Current: 10/25 = 40%.
+`overall = checked / total checklist items` across F01–F06 (evidence required). Current: 11/25 = 44%.
 
 ## Build Plan Gate Checklist
 
-- [ ] Architecture Accepted (pending)
-- [ ] Build plan Accepted (pending)
+- [x] Architecture Accepted (2026-06-10)
+- [x] Build plan Accepted (2026-06-10)
 - [x] First shippable slice defined (F06 = shippable; F01–F04 prove the product locally)
 - [x] Tasks have acceptance criteria
 - [x] Verification commands known
