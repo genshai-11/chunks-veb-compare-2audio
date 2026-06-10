@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!--
+  PROJECT OS PROGRESS BOARD v3
+  ────────────────────────────
+  STYLE LOCK: This is a Project OS dashboard, not product UI.
+  Default visual system: minimal Swiss/editorial board.
+  Typography: Oswald for labels/headings, Be Vietnam Pro for body.
+  Visual rules: white surfaces, thin borders, compact layout, restrained red accent.
+  Do not restyle this board to match product/app UI unless the human explicitly asks.
+
+  Canonical sources:
+    - Task state: Hermes Kanban
+    - Domain language: CONTEXT.md
+    - Context docs: context/*.md
+    - Progress: checked checklist items with evidence
+
+  Required sections:
+    1. Header snapshot
+    2. Checklist-derived progress
+    3. Phases
+    4. SDLC timeline
+    5. Kanban mirror: backlog | todo | doing | pending | done
+    6. Feature/task cards with prompts + checklist items
+    7. Full tech stack mirror
+    8. Runtime context tabs
+
+  Do not estimate progress. Update checklist evidence first, then recalculate.
+  Runtime tabs use fetch(); serve project root with: python -m http.server 8765
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sound Mirror — Progress Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--red:#d62828;--red-h:#b71c1c;--text:#111;--muted:#777;--border:#e2e2e2;--surface:#fff;--bg:#f5f5f5;--green:#15803d;--amber:#92400e;--blue:#1d4ed8;--purple:#6d28d9;--pending:#fff7ed}body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);padding:36px 20px 80px;font-size:14px;line-height:1.6}.container{max-width:1080px;margin:0 auto}.label,h2{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}h2{font-size:11px;letter-spacing:.2em;padding-bottom:8px;border-bottom:1px solid var(--border);margin:36px 0 16px}.header{border-bottom:2px solid var(--text);padding-bottom:18px;margin-bottom:28px}.header-top{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}.wordmark{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--red)}h1{font-family:'Oswald',sans-serif;font-size:30px;font-weight:600}.meta{display:flex;gap:18px;font-size:12px;color:var(--muted);margin:6px 0 14px;flex-wrap:wrap}.notice{background:white;border:1px solid var(--border);border-left:3px solid var(--red);padding:10px 12px;font-size:12px;color:var(--muted);margin:12px 0}.progress-wrap{display:flex;align-items:center;gap:12px}.progress-track{flex:1;height:8px;background:var(--border);overflow:hidden}.progress-fill{height:100%;background:var(--red);transition:width .5s ease}.progress-label{font-family:'Oswald',sans-serif;font-size:24px;font-weight:600;min-width:58px;text-align:right}.progress-sub{font-size:12px;color:var(--muted)}.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}@media(max-width:900px){.grid5,.grid3{grid-template-columns:1fr 1fr}}@media(max-width:560px){.grid5,.grid3{grid-template-columns:1fr}}.box,.phase,.step,.feature-card{background:var(--surface);border:1px solid var(--border);padding:14px}.phase.doing,.step.current,.feature-card.state-doing{border-left:3px solid var(--red)}.phase.done,.step.done{border-left:3px solid var(--green);opacity:.78}.phase-num{font-family:'Oswald';font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}.phase-name{font-family:'Oswald';font-size:14px;font-weight:500;margin:3px 0 8px}.phase-pct{font-family:'Oswald';font-size:18px;font-weight:600;margin-bottom:4px}.bar{height:3px;background:var(--border)}.bar-fill{height:100%;background:var(--red)}.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:2px;margin-top:6px;text-transform:uppercase}.badge-done{background:#dcfce7;color:var(--green)}.badge-doing{background:#fef3c7;color:var(--amber)}.badge-todo{background:#f1f5f9;color:#475569}.badge-pending{background:#fff7ed;color:#9a3412}.sdlc{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding-bottom:4px}.sdlc-stage{background:var(--surface);border:1px solid var(--border);padding:14px 12px;min-width:116px;text-align:center;flex-shrink:0}.sdlc-stage+.sdlc-stage{border-left:none}.sdlc-stage.done{border-top:3px solid var(--green)}.sdlc-stage.current{border-top:3px solid var(--red);background:#fffafa}.sdlc-icon{font-size:20px;margin-bottom:5px}.sdlc-name{font-family:'Oswald';font-size:12px;font-weight:500;margin-bottom:3px}.sdlc-sub{font-size:10px;color:var(--muted)}.sdlc-arrow{display:flex;align-items:center;font-size:16px;color:var(--border);padding:0 2px;flex-shrink:0}.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}@media(max-width:980px){.kanban{grid-template-columns:1fr 1fr}}.col-title{font-family:'Oswald';font-size:10px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}.col-count{background:var(--border);color:var(--muted);font-size:10px;padding:1px 6px;border-radius:10px}.kcard{background:var(--surface);border:1px solid var(--border);padding:9px 11px;margin-bottom:6px;font-size:12px}.kcard .card-tag{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-family:'Oswald';margin-bottom:2px}.kcard.done{background:#f0fdf4;border-color:#bbf7d0}.kcard.doing{border-left:3px solid var(--red)}.kcard.pending{background:var(--pending);border-color:#fed7aa}.empty-col{font-size:12px;color:var(--muted);padding:6px 0}.feature-card{padding:0;margin-bottom:7px}.feature-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none}.feature-header:hover{background:#fafafa}.fcheck{width:20px;height:20px;border:1.5px solid var(--border);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px}.fcheck.done{background:var(--green);border-color:var(--green);color:white}.fcheck.doing{background:var(--red);border-color:var(--red);color:white}.fid{font-family:'Oswald';font-size:11px;letter-spacing:.12em;color:var(--muted);min-width:34px}.fname{flex:1;font-weight:500;font-size:13px}.fmeta{font-size:11px;color:var(--muted)}.feature-detail{display:none;padding:0 14px 14px 44px;border-top:1px solid var(--border)}.detail-items{margin:12px 0}.detail-items li{font-size:12px;color:var(--muted);margin-bottom:4px;list-style:none}.prompt-block,pre{background:#f8f8f8;border:1px solid var(--border);padding:10px 12px;font-family:monospace;font-size:11px;color:#333;white-space:pre-wrap;margin:10px 0;line-height:1.5}.btn{font-family:'Be Vietnam Pro';font-size:12px;font-weight:500;padding:6px 14px;border:1px solid var(--border);background:var(--surface);cursor:pointer}.btn:hover{background:#f5f5f5}.stack{display:flex;flex-direction:column;border:1px solid var(--border)}.stack-layer{display:flex;align-items:center;border-bottom:1px solid var(--border)}.stack-layer:last-child{border-bottom:none}.layer-label{width:112px;flex-shrink:0;padding:14px;font-family:'Oswald';font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:white;display:flex;align-items:center;justify-content:center;text-align:center;min-height:56px}.deploy{background:#444}.ai{background:var(--purple)}.backend{background:var(--green)}.framework{background:#111}.language{background:var(--blue)}.data{background:#0f766e}.ui{background:#9a3412}.layer-chips{flex:1;padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;background:white}.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;font-family:'Oswald';font-size:12px;font-weight:500;letter-spacing:.04em;border:1px solid var(--border)}.chip img{width:16px;height:16px;object-fit:contain;display:inline-block}.chip .fallback-icon{font-size:14px;line-height:1}.chip.tbd{color:var(--muted);border-style:dashed;font-style:italic}.tabs{background:white;border:1px solid var(--border)}.tab-buttons{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--border)}.tab-buttons button{border:0;border-right:1px solid var(--border);background:white;padding:10px 14px;font-family:'Oswald';letter-spacing:.12em;text-transform:uppercase;font-size:10px;cursor:pointer}.tab-buttons button.active{background:#111;color:white}.tab-body{padding:14px;min-height:180px}.footer{margin-top:48px;padding-top:14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:4px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="container">
+<header class="header">
+  <div class="header-top"><span class="wordmark" id="project-slug">PROJECT</span><h1 id="project-title">Project OS — Progress Board</h1></div>
+  <div class="meta"><span>📅 Started: <span id="started">YYYY-MM-DD</span></span><span>🔄 Updated: <span id="updated">YYYY-MM-DD</span></span><span>📍 <span id="current-phase">Phase 0 — Project OS</span></span><span>⚡ Stack: <span id="stack-summary">Candidate</span></span><span>🧭 Board: <span id="board-summary">Hermes required</span></span></div>
+  <div class="notice">Hermes Kanban is canonical task state. This board is a visual mirror. Progress is calculated from checked checklist items with evidence — never estimated.</div>
+  <div class="progress-wrap"><div><div class="progress-sub">Overall progress</div><div class="progress-label" id="pct-overall">0%</div></div><div class="progress-track"><div class="progress-fill" id="bar-overall" style="width:0%"></div></div><div style="font-size:12px;color:var(--muted);white-space:nowrap"><span id="checked-count">0</span> / <span id="total-count">0</span> checklist items</div></div>
+</header>
+
+<h2>Phases</h2><div class="grid5" id="phases"></div>
+<h2>SDLC Timeline</h2><div class="sdlc" id="sdlc"></div>
+<h2>Kanban Mirror</h2><div class="kanban" id="kanban"></div>
+<h2>Features / Tasks — click to expand prompt + checklist</h2><div id="features"></div>
+<h2>Full Tech Stack</h2><div class="stack" id="stack"></div>
+<h2>System Map — logic flow (mirror of context/02-architecture.md)</h2><div id="diagrams"></div>
+<h2>Runtime Context</h2><div class="tabs"><div class="tab-buttons" id="tab-buttons"></div><div class="tab-body" id="tab-body">Loading…</div></div>
+<footer class="footer"><span>Visual system: minimal Swiss/editorial. Canonical state: Hermes + context files.</span><span>Serve with: <code>python -m http.server 8765</code></span></footer>
+</div>
+<script>
+const BOARD={project:{slug:'SOUND-MIRROR · 10',title:'Sound Mirror — Progress Board',started:'2026-06-06',updated:'2026-06-10',phase:'P0 init + P3 verification',stackSummary:'Detected (vanilla static) — pending acceptance',boardSummary:'sound-mirror — pending sync (run scripts/seed-sound-mirror-board.ps1)'},
+phases:[{id:'P0',name:'Project OS',weight:15,status:'doing',checked:5,total:6},{id:'P1',name:'Methods + Verdict',weight:25,status:'pending',checked:4,total:8},{id:'P2',name:'wav2vec ONNX',weight:15,status:'pending',checked:2,total:4},{id:'P3',name:'Hygiene + Hardening',weight:25,status:'doing',checked:2,total:8},{id:'P4',name:'Ship + Ops',weight:20,status:'todo',checked:0,total:5}],
+sdlc:[['Discover','PRD/domain/constraints','done','🔎'],['Design','Stack/UI/agents/plan','done','✏️'],['Build','Small verified slices','done','🛠️'],['Test','Behavior/security/UX','current','✅'],['Ship','Deploy/runbook/rollback','todo','🚀'],['Operate','Monitor/support/fix','todo','📈'],['Learn','Retro/context updates','todo','♻️']],
+stack:{Deploy:[{name:'Vercel (static)',icon:'🚀'}],AI:[{name:'wav2vec ONNX — @xenova/transformers (CDN, lazy)',icon:'✨'},{name:'LLM explain — user endpoint (optional)',icon:'💬'}],Backend:[{name:'none — fully client-side',icon:'⚙️'}],Data:[{name:'IndexedDB (History + audio blobs)',icon:'🗄️'},{name:'localStorage (LLM settings)',icon:'🔑'}],Framework:[{name:'none — vanilla ES modules, no build',icon:'🧱'},{name:'vitest (tests)',icon:'🧪'}],UI:[{name:'style.css — Swiss/editorial minimal',icon:'🎨'}],Language:[{name:'JavaScript (ES modules)',icon:'JS'}]},
+features:[
+{id:'F01',name:'DSP method expansion + playback',phase:'P1',state:'pending',checked:2,total:4,items:['☑ Implemented (commits 00797c8, 2acbc9a, 537a600, a54a639, c7a839d)','☑ Unit tests exist (tests/dsp.deltas.test.js)','☐ npm test green on Windows (evidence)','☐ Manual run: all methods score a real Analysis Pair'],prompt:'Verify F01: run npm test on Windows and a manual analyzer run with a real Analysis Pair. Record output/screenshots, check items in context/03-build-plan.md, update Hermes + 04-operating-state + this BOARD.'},
+{id:'F02',name:'Verdict workflow + Method Performance',phase:'P1',state:'pending',checked:2,total:4,items:['☑ Implemented (commits 52cd3fa, e0e9465, 200969a, 022a6bd, 732dbc2)','☑ Unit tests exist (tests/methodEvaluator.test.js)','☐ npm test green (evidence)','☐ Manual: ≥5 Verdicts → Spearman panel renders'],prompt:'Verify F02: label ≥5 History Entries with Verdicts, confirm Method Performance panel ranks methods. Record evidence, update checklists and board.'},
+{id:'F03',name:'wav2vec via ONNX (cross-language)',phase:'P2',state:'pending',checked:2,total:4,items:['☑ Implemented (commit fbf7d1c, ADR-0002)','☑ Lazy load, not defaultOn per ADR-0002','☐ Manual: model downloads, caches, scores a cross-language pair','☐ R&D: load time acceptable on real hardware'],prompt:'Verify F03: first-use model download with loading state, cached on reload, plausible Score on an EN/VI pair. Record evidence and timing.'},
+{id:'F04',name:'UI restyle — Stitch Swiss minimal',phase:'P3',state:'pending',checked:2,total:4,items:['☑ Implemented (style.css, guide update 7f9325d)','☑ Tokens registered in context/07-ui-system.md','☐ Visual review/screenshots: analyzer, history, guide, LLM settings','☐ DOM-ID guardrail spot-checked'],prompt:'Visual review of all four pages against context/07-ui-system.md tokens. Capture screenshots as evidence. Do not change DOM IDs.'},
+{id:'F05',name:'Repo hygiene cleanup (approved only)',phase:'P3',state:'todo',checked:0,total:4,items:['☐ Lucy confirms candidates (src/.pi/gsd, server logs, DESIGN.md merge, .gitattributes, folder rename)','☐ Apply approved changes only','☐ npm test + app loads after cleanup','☐ Hygiene audit updated to done'],prompt:'BLOCKED until Lucy confirms context/audits/repository-hygiene-audit.md candidates (CAND-003/004 in 05-decisions.md). Then apply only approved items.'},
+{id:'F06',name:'Release to Vercel production',phase:'P4',state:'todo',checked:0,total:5,items:['☐ Clean tree, line endings fixed, commit + tag','☐ Preview validated (analyzer, guide, LLM settings, model test, JSON AI analysis)','☐ Promote to production','☐ Rollback path tested/documented','☐ Runbook + operating state updated with evidence'],prompt:'BLOCKED until stack/build plan Accepted and F01–F05 verified. Follow release flow in context/06-runbook.md: commit → tag → preview → validate 5 checks → promote → evidence.'}],
+tabs:[['Domain','../CONTEXT.md'],['PRD','01-prd.md'],['Architecture','02-architecture.md'],['Plan','03-build-plan.md'],['State','04-operating-state.md'],['Decisions','05-decisions.md'],['Runbook','06-runbook.md'],['UI','07-ui-system.md'],['Routing','08-agent-routing.md']],
+diagrams:[{id:'D01',title:'Sound Mirror — input / process / output (all in browser)',source:'context/02-architecture.md',mermaid:`flowchart LR
+  subgraph IN[Input]
+    A[Audio A — upload/record]
+    B[Audio B — upload/record]
+  end
+  subgraph PROC[Process — in browser]
+    P[Preprocess: normalize / trim] --> M[DSP Methods: MFCC+DTW, LPC, VUV, sflux, formants, pitch, xcorr]
+    P --> W[wav2vec ONNX — lazy CDN]
+    M --> S[Scores 0–100]
+    W --> S
+  end
+  subgraph OUT[Output]
+    R[Results UI + visualizations]
+    H[(IndexedDB History: Verdict + Method Labels)]
+    J[JSON export]
+    L[Optional LLM explanation]
+  end
+  A --> P
+  B --> P
+  S --> R
+  R --> H
+  H --> PERF[Method Performance — Spearman]
+  S --> J
+  S --> L`}]};
+const order=['backlog','todo','doing','pending','done']; const icons={done:'✓',doing:'•',pending:'…',todo:'',backlog:''};
+function pct(checked,total){return total?Math.round(checked/total*100):0}
+function init(){project();phases();sdlc();kanban();features();stack();diagrams();tabs()}
+function diagrams(){let el=document.getElementById('diagrams');let ds=BOARD.diagrams||[];if(!ds.length){el.innerHTML='<div class="empty-col">No system diagrams yet. Run /system-diagram to generate from context/02-architecture.md.</div>';return}
+el.innerHTML=ds.map(d=>`<div class="box" style="margin-bottom:10px"><div class="label" style="margin-bottom:8px">${d.id} · ${d.title} <span style="text-transform:none;letter-spacing:0">— canonical: <code>${d.source||'context/02-architecture.md'}</code></span></div><pre class="mermaid" id="mmd-${d.id}">${escapeHtml(d.mermaid)}</pre></div>`).join('');
+let s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
+s.onload=()=>{mermaid.initialize({startOnLoad:false,theme:'neutral',themeVariables:{fontFamily:'Be Vietnam Pro, sans-serif',primaryColor:'#ffffff',primaryBorderColor:'#e2e2e2',primaryTextColor:'#111111',lineColor:'#777777',clusterBkg:'#f5f5f5',clusterBorder:'#e2e2e2'},flowchart:{curve:'linear'}});document.querySelectorAll('pre.mermaid').forEach(p=>{p.textContent=p.textContent});mermaid.run({querySelector:'pre.mermaid'})};
+s.onerror=()=>{ds.forEach(d=>{let p=document.getElementById('mmd-'+d.id);if(p)p.insertAdjacentHTML('beforebegin','<div class="progress-sub" style="margin-bottom:6px">Offline — showing diagram source (mermaid):</div>')})};
+document.body.appendChild(s)}
+function project(){document.getElementById('project-slug').textContent=BOARD.project.slug;document.getElementById('project-title').textContent=BOARD.project.title;document.getElementById('started').textContent=BOARD.project.started;document.getElementById('updated').textContent=BOARD.project.updated;document.getElementById('current-phase').textContent=BOARD.project.phase;document.getElementById('stack-summary').textContent=BOARD.project.stackSummary;document.getElementById('board-summary').textContent=BOARD.project.boardSummary;updateProgress()}
+function updateProgress(){let checked=BOARD.phases.reduce((n,p)=>n+(p.checked||0),0)+BOARD.features.reduce((n,f)=>n+(f.checked||0),0);let total=BOARD.phases.reduce((n,p)=>n+(p.total||0),0)+BOARD.features.reduce((n,f)=>n+(f.total||0),0);let overall=pct(checked,total);document.getElementById('pct-overall').textContent=overall+'%';document.getElementById('bar-overall').style.width=overall+'%';document.getElementById('checked-count').textContent=checked;document.getElementById('total-count').textContent=total}
+function phases(){document.getElementById('phases').innerHTML=BOARD.phases.map(p=>{let x=pct(p.checked,p.total);return `<div class="phase ${p.status}"><div class="phase-num">${p.id}</div><div class="phase-name">${p.name}</div><div class="phase-pct">${x}%</div><div class="bar"><div class="bar-fill" style="width:${x}%"></div></div><span class="badge badge-${p.status==='done'?'done':p.status==='doing'?'doing':p.status==='pending'?'pending':'todo'}">${p.status}</span><div class="progress-sub">${p.checked||0}/${p.total||0} checked</div></div>`}).join('')}
+function sdlc(){document.getElementById('sdlc').innerHTML=BOARD.sdlc.map((s,i)=>`<div class="sdlc-stage ${s[2]}"><div class="sdlc-icon">${s[3]}</div><div class="sdlc-name">${s[0]}</div><div class="sdlc-sub">${s[1]}</div></div>${i<BOARD.sdlc.length-1?'<div class="sdlc-arrow">→</div>':''}`).join('')}
+function kanban(){document.getElementById('kanban').innerHTML=order.map(st=>{let fs=BOARD.features.filter(f=>f.state===st);return `<div><div class="col-title">${st} <span class="col-count">${fs.length}</span></div>${fs.map(f=>`<div class="kcard ${st}"><div class="card-tag">${f.id} · ${f.checked||0}/${f.total||0}</div>${f.name}</div>`).join('')||'<div class="empty-col">—</div>'}</div>`}).join('')}
+function features(){document.getElementById('features').innerHTML=BOARD.features.map(f=>`<div class="feature-card state-${f.state}" data-id="${f.id}"><div class="feature-header" onclick="toggleFeature('${f.id}')"><div class="fcheck ${f.state}">${icons[f.state]||''}</div><span class="fid">${f.id}</span><span class="fname">${f.name}</span><span class="fmeta">${f.phase} · ${f.checked||0}/${f.total||0} checked</span><span class="badge badge-${f.state==='done'?'done':f.state==='doing'?'doing':f.state==='pending'?'pending':'todo'}">${f.state}</span><span>▸</span></div><div class="feature-detail" id="detail-${f.id}"><ul class="detail-items">${(f.items||[]).map(i=>`<li>${i}</li>`).join('')}</ul><div class="label">Prompt</div><div class="prompt-block" id="prompt-${f.id}">${escapeHtml(f.prompt||'')}</div><button class="btn" onclick="copyPrompt('${f.id}')">Copy prompt</button></div></div>`).join('')}
+function stackChip(x){let item=typeof x==='string'?{name:x}:x;let cls=String(item.name).includes('TBD')?'tbd':'';let icon=item.logo?`<img src="${item.logo}" alt="" onerror="this.style.display='none'">`:item.icon?`<span class="fallback-icon">${item.icon}</span>`:'';return `<span class="chip ${cls}">${icon}<span>${item.name}</span></span>`}
+function stack(){document.getElementById('stack').innerHTML=Object.entries(BOARD.stack).map(([k,v])=>`<div class="stack-layer"><div class="layer-label ${k.toLowerCase()}">${k}</div><div class="layer-chips">${v.map(stackChip).join('')}</div></div>`).join('')}
+function toggleFeature(id){let el=document.getElementById('detail-'+id);el.style.display=el.style.display==='block'?'none':'block'}
+async function copyPrompt(id){await navigator.clipboard.writeText(document.getElementById('prompt-'+id).textContent)}
+function tabs(){let btns=document.getElementById('tab-buttons');btns.innerHTML=BOARD.tabs.map((t,i)=>`<button class="${i===0?'active':''}" onclick="loadTab(${i})">${t[0]}</button>`).join('');loadTab(0)}
+async function loadTab(i){document.querySelectorAll('#tab-buttons button').forEach((b,n)=>b.classList.toggle('active',n===i));let [name,file]=BOARD.tabs[i];try{let r=await fetch(file);if(!r.ok)throw new Error(r.status+' '+r.statusText);let txt=await r.text();document.getElementById('tab-body').innerHTML='<pre>'+escapeHtml(txt)+'</pre>'}catch(e){document.getElementById('tab-body').innerHTML=`<p><b>${name}</b> could not load <code>${file}</code>.</p><p>Serve project root with <code>python -m http.server 8765</code>, then open <code>/context/progress-board.html</code>.</p><pre>${escapeHtml(String(e))}</pre>`}}
+function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+init();
+</script>
+</body>
+</html>
